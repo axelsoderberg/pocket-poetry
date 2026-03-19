@@ -368,12 +368,17 @@
 		padding: 0.3rem 0.5rem;
 		font-size: large;
 		font-family: 'Merriweather', Georgia, 'Times New Roman', Times, serif;
-		background-color: #fff;
-		border: 1px solid #1e1e1e;
+		background-color: var(--surface-bg);
+		color: var(--app-text);
+		border: 1px solid var(--surface-border);
 		transition:
 			transform 0.2s ease,
-			translate 0.35s ease-in-out;
-		box-shadow: #1e1e1e var(--shadow-near) var(--shadow-near) 0px;
+			translate 0.35s ease-in-out,
+			background-color var(--theme-transition-duration) var(--theme-transition-easing),
+			color var(--theme-transition-duration) var(--theme-transition-easing),
+			border-color var(--theme-transition-duration) var(--theme-transition-easing),
+			box-shadow var(--theme-transition-duration) var(--theme-transition-easing);
+		box-shadow: var(--surface-shadow) var(--shadow-near) var(--shadow-near) 0px;
 	}
 
 	.word-card.moving {

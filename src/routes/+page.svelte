@@ -97,7 +97,8 @@
 	.header {
 		width: 100%;
 		max-width: 980px;
-		color: #555555;
+		color: var(--muted-text);
+		transition: color var(--theme-transition-duration) var(--theme-transition-easing);
 	}
 
 	.page-title {
@@ -107,7 +108,8 @@
 	}
 
 	.day-number {
-		color: #888;
+		color: var(--subtle-text);
+		transition: color var(--theme-transition-duration) var(--theme-transition-easing);
 	}
 
 	.word-box-shell {
@@ -126,12 +128,16 @@
 		max-width: 980px;
 		min-width: 100px;
 		height: 106px;
-		background-color: #fff;
-		border: 1px solid #1e1e1e;
+		background-color: var(--surface-bg);
+		border: 1px solid var(--surface-border);
 		box-shadow:
-			#1e1e1e 3px 3px 0px,
-			#1e1e1e 6px 6px 0px;
-		transition: height 0.3s ease;
+			var(--surface-shadow) 3px 3px 0px,
+			var(--surface-shadow) 6px 6px 0px;
+		transition:
+			height 0.3s ease,
+			background-color var(--theme-transition-duration) var(--theme-transition-easing),
+			border-color var(--theme-transition-duration) var(--theme-transition-easing),
+			box-shadow var(--theme-transition-duration) var(--theme-transition-easing);
 		transform-origin: bottom center;
 	}
 
