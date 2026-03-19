@@ -40,6 +40,27 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<script>
+		(() => {
+			let resolvedTheme = 'light';
+
+			try {
+				const storageKey = 'pocket-poetry-theme';
+				const storedTheme = localStorage.getItem(storageKey);
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				resolvedTheme =
+					storedTheme === 'light' || storedTheme === 'dark'
+						? storedTheme
+						: prefersDark
+							? 'dark'
+							: 'light';
+			} catch {
+				resolvedTheme = 'light';
+			}
+
+			document.documentElement.dataset.theme = resolvedTheme;
+		})();
+	</script>
 </svelte:head>
 
 <button
