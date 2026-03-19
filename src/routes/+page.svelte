@@ -57,7 +57,7 @@
 <main class="page">
 	<div>
 		<div class="header">
-			<h1 class="page-title">pocket poetry <span class="day-number">#{data.dayKey}</span></h1>
+			<h1 class="page-title">pocket poetry <span class="day-number">#{data.dayNumber}</span></h1>
 		</div>
 		<div class="word-box-shell" aria-hidden="true">
 			<div class="word-box" class:expanded={isExpanded} bind:this={wordBoxElement}></div>

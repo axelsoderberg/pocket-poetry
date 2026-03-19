@@ -348,7 +348,6 @@
 	bind:this={cardElement}
 	class="word-card"
 	class:moving={isDragging}
-	class:in-word-box={isInWordBox}
 	onmousedown={onMouseDown}
 	onmouseenter={onMouseEnter}
 	onmouseleave={onMouseLeave}
@@ -380,10 +379,5 @@
 	.word-card.moving {
 		cursor: grabbing;
 		transition: transform 0.2s ease;
-	}
-
-	.word-card.in-word-box {
-		background-color: #3b82f6;
-		color: #fff;
 	}
 </style>
