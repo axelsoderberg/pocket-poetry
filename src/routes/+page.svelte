@@ -3,11 +3,18 @@
 	import { buildInitialWordPositions, type PositionedWord } from '$lib/words/placement';
 	import type { PageData } from './$types';
 
+	type HoveredWordCard = {
+		id: string;
+		centerX: number;
+		centerY: number;
+	};
+
 	let { data }: { data: PageData } = $props();
 
 	let wordBoxElement: HTMLDivElement | null = $state(null);
 	let isExpanded = $state(false);
 	let positionedWords = $state<PositionedWord[]>([]);
+	let hoveredWordCard = $state<HoveredWordCard | null>(null);
 
 	// Configurable "extra" padding (in pixels)
 	const THRESHOLD = 50;
@@ -26,6 +33,16 @@
 			event.clientY <= rect.bottom + THRESHOLD;
 	};
 
+	const handleCardHoverInBox = (detail: HoveredWordCard) => {
+		hoveredWordCard = detail;
+	};
+
+	const handleCardLeaveInBox = (cardId: string) => {
+		if (hoveredWordCard?.id === cardId) {
+			hoveredWordCard = null;
+		}
+	};
+
 	$effect(() => {
 		if (!wordBoxElement || positionedWords.length > 0) {
 			return;
@@ -38,14 +55,27 @@
 <svelte:window onmousemove={handleMouseMove} />
 
 <main class="page">
-	<h1 class="page-title">pocket poetry</h1>
-	<div class="word-box-shell" aria-hidden="true">
-		<div class="word-box" class:expanded={isExpanded} bind:this={wordBoxElement}></div>
-	</div>
+	<div>
+		<div class="header">
+			<h1 class="page-title">pocket poetry <span class="day-number">#{data.dayKey}</span></h1>
+		</div>
+		<div class="word-box-shell" aria-hidden="true">
+			<div class="word-box" class:expanded={isExpanded} bind:this={wordBoxElement}></div>
+		</div>
 
-	{#each positionedWords as word (word.id)}
-		<WordCard text={word.text} x={word.x} y={word.y} wordBox={wordBoxElement} />
-	{/each}
+		{#each positionedWords as word (word.id)}
+			<WordCard
+				cardId={word.id}
+				text={word.text}
+				x={word.x}
+				y={word.y}
+				wordBox={wordBoxElement}
+				hoveredCard={hoveredWordCard}
+				onHoverInBox={handleCardHoverInBox}
+				onLeaveInBox={handleCardLeaveInBox}
+			/>
+		{/each}
+	</div>
 </main>
 
 <style>
@@ -60,12 +90,24 @@
 		height: 100vh;
 		position: relative;
 		overflow: hidden;
+		display: flex;
+		justify-content: center;
+	}
+
+	.header {
+		width: 100%;
+		max-width: 980px;
+		color: #555555;
 	}
 
 	.page-title {
 		font-family: 'Merriweather', serif;
 		font-size: 1rem;
 		margin: 1rem 1rem 0;
+	}
+
+	.day-number {
+		color: #888;
 	}
 
 	.word-box-shell {
