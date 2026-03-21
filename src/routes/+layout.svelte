@@ -155,7 +155,7 @@
 		--subtle-text: #9b9b9b;
 		--surface-bg: #1d1f23;
 		--surface-border: #f3f3f3;
-		--surface-shadow: #0b0b0c;
+		--surface-shadow: #bbbbbb;
 	}
 
 	:global(html),
