@@ -336,6 +336,38 @@
 		return { appBackground, appText, frameBackground, frameBorder };
 	};
 
+	const waitForNextFrame = () => {
+		return new Promise<void>((resolve) => {
+			requestAnimationFrame(() => resolve());
+		});
+	};
+
+	const markWordsInWordBoxForExportHide = () => {
+		if (!pageElement || !wordBoxElement) {
+			return () => {};
+		}
+
+		const wordBoxRect = wordBoxElement.getBoundingClientRect();
+		const hiddenCards: HTMLElement[] = [];
+
+		for (const card of pageElement.querySelectorAll<HTMLElement>('.word-card')) {
+			const cardRect = card.getBoundingClientRect();
+
+			if (!isCenterInWordBox(cardRect, wordBoxRect)) {
+				continue;
+			}
+
+			card.setAttribute('data-share-hidden', 'true');
+			hiddenCards.push(card);
+		}
+
+		return () => {
+			for (const card of hiddenCards) {
+				card.removeAttribute('data-share-hidden');
+			}
+		};
+	};
+
 	const buildPolaroidImageDataUrl = async () => {
 		if (!pageElement) {
 			throw new Error('Unable to locate composition area.');
@@ -367,32 +399,43 @@
 		resultContext.fillStyle = appBackground;
 		resultContext.fillRect(framePadding, framePadding, photoWidth, photoHeight);
 
-		if (crop) {
-			const squareCrop = getSquareCropRect(crop, containerRect);
-			const pageCanvas = await toCanvas(pageElement, {
-				pixelRatio: SHARE_IMAGE_PIXEL_RATIO,
-				cacheBust: true,
-				backgroundColor: appBackground
-			});
+		const documentRoot = document.documentElement;
+		const clearHiddenCards = markWordsInWordBoxForExportHide();
 
-			const scaleX = pageCanvas.width / containerRect.width;
-			const scaleY = pageCanvas.height / containerRect.height;
-			const sourceX = squareCrop.x * scaleX;
-			const sourceY = squareCrop.y * scaleY;
-			const sourceWidth = squareCrop.width * scaleX;
-			const sourceHeight = squareCrop.height * scaleY;
+		documentRoot.classList.add('is-exporting-share');
+		await waitForNextFrame();
 
-			resultContext.drawImage(
-				pageCanvas,
-				sourceX,
-				sourceY,
-				sourceWidth,
-				sourceHeight,
-				framePadding,
-				framePadding,
-				photoWidth,
-				photoHeight
-			);
+		try {
+			if (crop) {
+				const squareCrop = getSquareCropRect(crop, containerRect);
+				const pageCanvas = await toCanvas(pageElement, {
+					pixelRatio: SHARE_IMAGE_PIXEL_RATIO,
+					cacheBust: true,
+					backgroundColor: appBackground
+				});
+
+				const scaleX = pageCanvas.width / containerRect.width;
+				const scaleY = pageCanvas.height / containerRect.height;
+				const sourceX = squareCrop.x * scaleX;
+				const sourceY = squareCrop.y * scaleY;
+				const sourceWidth = squareCrop.width * scaleX;
+				const sourceHeight = squareCrop.height * scaleY;
+
+				resultContext.drawImage(
+					pageCanvas,
+					sourceX,
+					sourceY,
+					sourceWidth,
+					sourceHeight,
+					framePadding,
+					framePadding,
+					photoWidth,
+					photoHeight
+				);
+			}
+		} finally {
+			documentRoot.classList.remove('is-exporting-share');
+			clearHiddenCards();
 		}
 
 		resultContext.strokeStyle = frameBorder;
@@ -767,6 +810,14 @@
 	.share-actions button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+	}
+
+	:global(html.is-exporting-share .header),
+	:global(html.is-exporting-share .word-box-shell),
+	:global(html.is-exporting-share .word-box-shuffle),
+	:global(html.is-exporting-share .controls),
+	:global(html.is-exporting-share .word-card[data-share-hidden='true']) {
+		display: none !important;
 	}
 
 	@media (max-width: 640px) {
