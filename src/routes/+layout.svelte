@@ -202,7 +202,13 @@
 				Inspired by the classic fridge magnet sets. 50 random words each day, resets midnight UTC.
 				Enjoy!
 			</p>
-			<p>Made by Axel Söderberg</p>
+			<p>
+				Made by <a href="https://axelsoderberg.com" rel="noopener noreferrer">Axel Söderberg</a>
+				— Code on
+				<a href="https://github.com/axelsoderberg/pocket-poetry" rel="noopener noreferrer">GitHub</a
+				>.
+			</p>
+			<p></p>
 			<button class="about-close" type="button" onclick={closeAbout}>Close</button>
 		</div>
 	</div>
@@ -331,6 +337,21 @@
 	.about-close {
 		display: block;
 		margin-left: auto;
+	}
+
+	.about-modal a {
+		color: var(--app-text);
+		text-decoration-color: var(--surface-border);
+		text-underline-offset: 0.14em;
+		transition:
+			color var(--theme-transition-duration) var(--theme-transition-easing),
+			text-decoration-color var(--theme-transition-duration) var(--theme-transition-easing);
+	}
+
+	.about-modal a:hover,
+	.about-modal a:focus-visible {
+		color: var(--muted-text);
+		text-decoration-color: var(--muted-text);
 	}
 
 	/* .about-modal p {
