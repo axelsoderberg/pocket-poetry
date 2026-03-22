@@ -36,6 +36,5 @@ export const utilityTokens = [
 	's',
 	'!',
 	'?',
-	'.',
 	'...'
 ] as const;

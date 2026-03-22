@@ -208,7 +208,6 @@
 				<a href="https://github.com/axelsoderberg/pocket-poetry" rel="noopener noreferrer">GitHub</a
 				>.
 			</p>
-			<p></p>
 			<button class="about-close" type="button" onclick={closeAbout}>Close</button>
 		</div>
 	</div>

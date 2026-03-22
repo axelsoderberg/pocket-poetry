@@ -1,7 +1,7 @@
 import { buildDailyWords, DAILY_WORD_COUNT, getUtcDayKey } from '$lib/words/daily';
 import type { PageServerLoad } from './$types';
 
-const RELEASE_DAY_KEY = '2026-03-12';
+const RELEASE_DAY_KEY = '2026-03-22';
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function parseUtcDayKey(dayKey: string) {
