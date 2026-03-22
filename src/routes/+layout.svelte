@@ -10,6 +10,7 @@
 	const THEME_STORAGE_KEY = 'pocket-poetry-theme';
 	let theme = $state<Theme>('light');
 	let isAboutOpen = $state(false);
+	let isMobileMenuOpen = $state(false);
 
 	function applyTheme(nextTheme: Theme) {
 		theme = nextTheme;
@@ -31,8 +32,22 @@
 		isAboutOpen = true;
 	}
 
+	function openAboutFromMobileMenu() {
+		isMobileMenuOpen = false;
+		openAbout();
+	}
+
 	function closeAbout() {
 		isAboutOpen = false;
+	}
+
+	function toggleMobileMenu() {
+		isMobileMenuOpen = !isMobileMenuOpen;
+	}
+
+	function toggleThemeFromMobileMenu() {
+		toggleTheme();
+		isMobileMenuOpen = false;
 	}
 
 	function handleOverlayClick(event: MouseEvent) {
@@ -42,6 +57,10 @@
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && isMobileMenuOpen) {
+			isMobileMenuOpen = false;
+		}
+
 		if (event.key === 'Escape' && isAboutOpen) {
 			closeAbout();
 		}
@@ -89,7 +108,44 @@
 
 <div class="controls">
 	<button
-		class="theme-toggle"
+		class="menu-toggle"
+		onclick={toggleMobileMenu}
+		type="button"
+		aria-label="Toggle menu"
+		aria-haspopup="menu"
+		aria-expanded={isMobileMenuOpen}
+		aria-controls="mobile-controls-menu"
+	>
+		☰ Menu
+	</button>
+
+	{#if isMobileMenuOpen}
+		<div id="mobile-controls-menu" class="mobile-menu" role="menu" aria-label="Header controls">
+			<button
+				class="theme-toggle"
+				onclick={toggleThemeFromMobileMenu}
+				type="button"
+				role="menuitem"
+				aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+			>
+				{theme === 'light' ? 'Dark mode' : 'Light mode'}
+			</button>
+
+			<button
+				class="about-toggle"
+				onclick={openAboutFromMobileMenu}
+				type="button"
+				role="menuitem"
+				aria-haspopup="dialog"
+				aria-expanded={isAboutOpen}
+			>
+				About
+			</button>
+		</div>
+	{/if}
+
+	<button
+		class="theme-toggle desktop-control"
 		onclick={toggleTheme}
 		type="button"
 		aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
@@ -98,7 +154,7 @@
 	</button>
 
 	<button
-		class="about-toggle"
+		class="about-toggle desktop-control"
 		onclick={openAbout}
 		type="button"
 		aria-haspopup="dialog"
@@ -155,7 +211,7 @@
 		--subtle-text: #9b9b9b;
 		--surface-bg: #1d1f23;
 		--surface-border: #f3f3f3;
-		--surface-shadow: #bbbbbb;
+		--surface-shadow: #f3f3f3;
 	}
 
 	:global(html),
@@ -178,6 +234,7 @@
 		gap: 0.5rem;
 	}
 
+	.menu-toggle,
 	.theme-toggle,
 	.about-toggle,
 	.about-close {
@@ -192,6 +249,28 @@
 		transition:
 			background-color var(--theme-transition-duration) var(--theme-transition-easing),
 			color var(--theme-transition-duration) var(--theme-transition-easing),
+			border-color var(--theme-transition-duration) var(--theme-transition-easing),
+			box-shadow var(--theme-transition-duration) var(--theme-transition-easing);
+	}
+
+	.menu-toggle,
+	.mobile-menu {
+		display: none;
+	}
+
+	.mobile-menu {
+		width: max-content;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		background: var(--surface-bg);
+		border: 1px solid var(--surface-border);
+		box-shadow:
+			var(--surface-shadow) 2px 2px 0px,
+			var(--surface-shadow) 4px 4px 0px;
+		transition:
+			background-color var(--theme-transition-duration) var(--theme-transition-easing),
 			border-color var(--theme-transition-duration) var(--theme-transition-easing),
 			box-shadow var(--theme-transition-duration) var(--theme-transition-easing);
 	}
@@ -242,6 +321,20 @@
 	@media (prefers-reduced-motion: reduce) {
 		:global(html) {
 			--theme-transition-duration: 0ms;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.desktop-control {
+			display: none;
+		}
+
+		.menu-toggle {
+			display: inline-block;
+		}
+
+		.mobile-menu {
+			display: flex;
 		}
 	}
 </style>

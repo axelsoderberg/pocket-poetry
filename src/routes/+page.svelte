@@ -214,7 +214,7 @@
 />
 
 <main class="page" class:panning={isPanning} onpointerdown={handlePagePointerDown}>
-	<div>
+	<div class="page-content">
 		<div class="header">
 			<h1 class="page-title">pocket poetry <span class="day-number">#{data.dayNumber}</span></h1>
 		</div>
@@ -258,6 +258,11 @@
 		cursor: grab;
 	}
 
+	.page-content {
+		width: 100%;
+		max-width: 980px;
+	}
+
 	.page.panning {
 		cursor: grabbing;
 	}
@@ -265,6 +270,7 @@
 	.header {
 		width: 100%;
 		max-width: 980px;
+		text-align: center;
 		color: var(--muted-text);
 		transition: color var(--theme-transition-duration) var(--theme-transition-easing);
 	}
@@ -311,5 +317,20 @@
 
 	.expanded {
 		height: 200px;
+	}
+
+	@media (max-width: 640px) {
+		.header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			text-align: left;
+			padding: 0 1rem;
+			box-sizing: border-box;
+		}
+
+		.page-title {
+			margin: 1rem 0 0;
+		}
 	}
 </style>
