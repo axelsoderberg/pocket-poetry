@@ -32,6 +32,19 @@
 		isAboutOpen = true;
 	}
 
+	function openShare() {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		window.dispatchEvent(new CustomEvent('pocketpoetry:share-request'));
+	}
+
+	function openShareFromMobileMenu() {
+		isMobileMenuOpen = false;
+		openShare();
+	}
+
 	function openAboutFromMobileMenu() {
 		isMobileMenuOpen = false;
 		openAbout();
@@ -121,6 +134,10 @@
 
 	{#if isMobileMenuOpen}
 		<div id="mobile-controls-menu" class="mobile-menu" role="menu" aria-label="Header controls">
+			<button class="share-toggle" onclick={openShareFromMobileMenu} type="button" role="menuitem">
+				Share
+			</button>
+
 			<button
 				class="theme-toggle"
 				onclick={toggleThemeFromMobileMenu}
@@ -143,6 +160,8 @@
 			</button>
 		</div>
 	{/if}
+
+	<button class="share-toggle desktop-control" onclick={openShare} type="button">Share</button>
 
 	<button
 		class="theme-toggle desktop-control"
@@ -180,8 +199,8 @@
 		>
 			<h2 id="about-title">About Pocket Poetry</h2>
 			<p>
-				Pocket Poetry is a small daily word playground inspired by the classic fridge magnet sets.
-				50 random words each day, resets midnight UTC. Enjoy!
+				Inspired by the classic fridge magnet sets. 50 random words each day, resets midnight UTC.
+				Enjoy!
 			</p>
 			<p>Made by Axel Söderberg</p>
 			<button class="about-close" type="button" onclick={closeAbout}>Close</button>
@@ -227,7 +246,7 @@
 		position: fixed;
 		top: 1rem;
 		right: 1rem;
-		z-index: 30;
+		z-index: 5000;
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
@@ -235,6 +254,7 @@
 	}
 
 	.menu-toggle,
+	.share-toggle,
 	.theme-toggle,
 	.about-toggle,
 	.about-close {

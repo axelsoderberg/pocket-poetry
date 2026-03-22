@@ -21,6 +21,7 @@
 		y: propY = 20,
 		panX = 0,
 		panY = 0,
+		shuffleToken: propShuffleToken = 0,
 		isPanning = false,
 		wordBox: propWordBox = null,
 		hoveredCard = null,
@@ -33,6 +34,7 @@
 		y?: number;
 		panX?: number;
 		panY?: number;
+		shuffleToken?: number;
 		isPanning?: boolean;
 		wordBox?: HTMLElement | null;
 		hoveredCard?: HoveredCard | null;
@@ -57,6 +59,7 @@
 	let positionPercentInWordBox = $state<{ x: number; y: number } | null>(null);
 	let previousPanX = $state(0);
 	let previousPanY = $state(0);
+	let previousShuffleToken = $state(0);
 	const WORD_BOX_MARGIN = 8;
 	const HOVER_PUSH_RADIUS = 140;
 	const HOVER_PUSH_MAX = 20;
@@ -64,6 +67,7 @@
 	const HOVER_CLOSE_BOOST_MAX = 16;
 	const WORD_BOX_LAYER_Z = 500;
 	const IN_BOX_Z_OFFSET = 200;
+	const MAX_IN_BOX_CARD_Z = 1200;
 
 	$effect(() => {
 		if (hasInitialized) {
@@ -225,9 +229,19 @@
 		return Math.round((baseOffset + (Math.random() * 0.8 - 0.4)) * 100) / 100;
 	}
 
+	function getRandomPositionInBounds(bounds: NonNullable<ReturnType<typeof getPlacementBounds>>) {
+		const xRange = Math.max(0, bounds.maxX - bounds.minX);
+		const yRange = Math.max(0, bounds.maxY - bounds.minY);
+
+		return {
+			x: bounds.minX + Math.random() * xRange,
+			y: bounds.minY + Math.random() * yRange
+		};
+	}
+
 	function getRenderZIndex() {
 		if (isInWordBox) {
-			return WORD_BOX_LAYER_Z + IN_BOX_Z_OFFSET + zIndex;
+			return Math.min(WORD_BOX_LAYER_Z + IN_BOX_Z_OFFSET + zIndex, MAX_IN_BOX_CARD_Z);
 		}
 
 		return Math.min(zIndex, WORD_BOX_LAYER_Z - 1);
@@ -383,6 +397,32 @@
 
 		hoverOffsetX = normalizedX * intensity;
 		hoverOffsetY = normalizedY * intensity;
+	});
+
+	$effect(() => {
+		if (propShuffleToken === previousShuffleToken) {
+			return;
+		}
+
+		previousShuffleToken = propShuffleToken;
+
+		if (!isInWordBox || isDragging) {
+			return;
+		}
+
+		const bounds = getPlacementBounds();
+
+		if (!bounds || isBoundsRangeInvalid(bounds)) {
+			return;
+		}
+
+		const nextPosition = getRandomPositionInBounds(bounds);
+		cardX = nextPosition.x;
+		cardY = nextPosition.y;
+		updateWordBoxState(bounds);
+		updatePositionPercent(bounds);
+		zIndex = getNextZIndex();
+		rotation = getRandomRotation();
 	});
 
 	$effect(() => {
