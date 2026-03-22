@@ -19,6 +19,9 @@
 		text,
 		x: propX = 20,
 		y: propY = 20,
+		panX = 0,
+		panY = 0,
+		isPanning = false,
 		wordBox: propWordBox = null,
 		hoveredCard = null,
 		onHoverInBox,
@@ -28,6 +31,9 @@
 		text: string;
 		x?: number;
 		y?: number;
+		panX?: number;
+		panY?: number;
+		isPanning?: boolean;
 		wordBox?: HTMLElement | null;
 		hoveredCard?: HoveredCard | null;
 		onHoverInBox?: (detail: HoveredCard) => void;
@@ -38,6 +44,7 @@
 	let cardY = $state(20);
 	let offsetX = $state(0);
 	let offsetY = $state(0);
+	let activePointerId = $state<number | null>(null);
 	let isDragging = $state(false);
 	let isInWordBox = $state(false);
 	let hasInitialized = $state(false);
@@ -48,11 +55,15 @@
 	let shadowOffset = getRandomShadowOffset(2);
 	let cardElement = $state<HTMLDivElement | null>(null);
 	let positionPercentInWordBox = $state<{ x: number; y: number } | null>(null);
+	let previousPanX = $state(0);
+	let previousPanY = $state(0);
 	const WORD_BOX_MARGIN = 8;
 	const HOVER_PUSH_RADIUS = 140;
 	const HOVER_PUSH_MAX = 20;
 	const HOVER_CLOSE_BOOST_RANGE = 56;
 	const HOVER_CLOSE_BOOST_MAX = 16;
+	const WORD_BOX_LAYER_Z = 500;
+	const IN_BOX_Z_OFFSET = 200;
 
 	$effect(() => {
 		if (hasInitialized) {
@@ -77,17 +88,25 @@
 		}
 
 		const wordBoxRect = wordBox.getBoundingClientRect();
+		const worldWordBoxRect = {
+			left: wordBoxRect.left + panX,
+			right: wordBoxRect.right + panX,
+			top: wordBoxRect.top + panY,
+			bottom: wordBoxRect.bottom + panY,
+			width: wordBoxRect.width,
+			height: wordBoxRect.height
+		};
 		const cardWidth = cardElement.offsetWidth;
 		const cardHeight = cardElement.offsetHeight;
 
 		return {
-			wordBoxRect,
+			wordBoxRect: worldWordBoxRect,
 			cardWidth,
 			cardHeight,
-			minX: wordBoxRect.left + WORD_BOX_MARGIN,
-			maxX: wordBoxRect.right - cardWidth - WORD_BOX_MARGIN,
-			minY: wordBoxRect.top + WORD_BOX_MARGIN,
-			maxY: wordBoxRect.bottom - cardHeight - WORD_BOX_MARGIN
+			minX: worldWordBoxRect.left + WORD_BOX_MARGIN,
+			maxX: worldWordBoxRect.right - cardWidth - WORD_BOX_MARGIN,
+			minY: worldWordBoxRect.top + WORD_BOX_MARGIN,
+			maxY: worldWordBoxRect.bottom - cardHeight - WORD_BOX_MARGIN
 		};
 	}
 
@@ -206,6 +225,14 @@
 		return Math.round((baseOffset + (Math.random() * 0.8 - 0.4)) * 100) / 100;
 	}
 
+	function getRenderZIndex() {
+		if (isInWordBox) {
+			return WORD_BOX_LAYER_Z + IN_BOX_Z_OFFSET + zIndex;
+		}
+
+		return Math.min(zIndex, WORD_BOX_LAYER_Z - 1);
+	}
+
 	function getCardCenter() {
 		if (!cardElement) {
 			return null;
@@ -233,13 +260,18 @@
 		};
 	}
 
-	function onMouseMove(event: MouseEvent) {
-		cardX = event.clientX - offsetX;
-		cardY = event.clientY - offsetY;
+	function onPointerMove(event: PointerEvent) {
+		if (!isDragging || activePointerId !== event.pointerId) {
+			return;
+		}
+
+		cardX = event.clientX - offsetX + panX;
+		cardY = event.clientY - offsetY + panY;
 	}
 
-	function onMouseUp() {
+	function finishDrag() {
 		isDragging = false;
+		activePointerId = null;
 		const bounds = getPlacementBounds();
 		moveInsideWordBoxIfNeeded(bounds);
 		const insideWordBox = updateWordBoxState(bounds);
@@ -249,24 +281,50 @@
 		} else {
 			positionPercentInWordBox = null;
 		}
-
-		window.removeEventListener('mousemove', onMouseMove);
-		window.removeEventListener('mouseup', onMouseUp);
 	}
 
-	function onMouseDown(event: MouseEvent) {
+	function onPointerUp(event: PointerEvent) {
+		if (activePointerId !== event.pointerId) {
+			return;
+		}
+
+		finishDrag();
+		window.removeEventListener('pointermove', onPointerMove);
+		window.removeEventListener('pointerup', onPointerUp);
+		window.removeEventListener('pointercancel', onPointerCancel);
+	}
+
+	function onPointerCancel(event: PointerEvent) {
+		if (activePointerId !== event.pointerId) {
+			return;
+		}
+
+		finishDrag();
+		window.removeEventListener('pointermove', onPointerMove);
+		window.removeEventListener('pointerup', onPointerUp);
+		window.removeEventListener('pointercancel', onPointerCancel);
+	}
+
+	function onPointerDown(event: PointerEvent) {
+		if (event.button !== 0 && event.pointerType === 'mouse') {
+			return;
+		}
+
+		event.preventDefault();
 		isDragging = true;
+		activePointerId = event.pointerId;
 		zIndex = getNextZIndex();
 		rotation = getRandomRotation();
-		offsetX = event.clientX - cardX;
-		offsetY = event.clientY - cardY;
+		offsetX = event.clientX - (cardX - panX);
+		offsetY = event.clientY - (cardY - panY);
 		updateWordBoxState();
-		window.addEventListener('mousemove', onMouseMove);
-		window.addEventListener('mouseup', onMouseUp);
+		window.addEventListener('pointermove', onPointerMove);
+		window.addEventListener('pointerup', onPointerUp);
+		window.addEventListener('pointercancel', onPointerCancel);
 	}
 
 	function onMouseEnter() {
-		if (!isInWordBox || isDragging) {
+		if (!isInWordBox || isDragging || isPanning) {
 			return;
 		}
 
@@ -288,7 +346,7 @@
 	}
 
 	$effect(() => {
-		if (!hoveredCard || hoveredCard.id === cardId || !isInWordBox || isDragging) {
+		if (!hoveredCard || hoveredCard.id === cardId || !isInWordBox || isDragging || isPanning) {
 			hoverOffsetX = 0;
 			hoverOffsetY = 0;
 			return;
@@ -342,18 +400,38 @@
 			resizeObserver.disconnect();
 		};
 	});
+
+	$effect(() => {
+		if (!hasInitialized) {
+			previousPanX = panX;
+			previousPanY = panY;
+			return;
+		}
+
+		const deltaX = panX - previousPanX;
+		const deltaY = panY - previousPanY;
+
+		if (isInWordBox && !isDragging && (deltaX !== 0 || deltaY !== 0)) {
+			cardX += deltaX;
+			cardY += deltaY;
+			updateWordBoxState();
+		}
+
+		previousPanX = panX;
+		previousPanY = panY;
+	});
 </script>
 
 <div
 	bind:this={cardElement}
 	class="word-card"
 	class:moving={isDragging}
-	onmousedown={onMouseDown}
+	onpointerdown={onPointerDown}
 	onmouseenter={onMouseEnter}
 	onmouseleave={onMouseLeave}
 	role="button"
 	tabindex="0"
-	style={`left: ${cardX}px; top: ${cardY}px; z-index: ${zIndex}; --shadow-near: ${shadowOffset}px; translate: ${hoverOffsetX}px ${hoverOffsetY}px; transform: rotate(${rotation}deg) ${isDragging ? 'scale(1.04)' : ''};`}
+	style={`left: ${cardX - panX}px; top: ${cardY - panY}px; z-index: ${getRenderZIndex()}; --shadow-near: ${shadowOffset}px; translate: ${hoverOffsetX}px ${hoverOffsetY}px; transform: rotate(${rotation}deg) ${isDragging ? 'scale(1.04)' : ''};`}
 >
 	{text}
 </div>
@@ -364,6 +442,7 @@
 	.word-card {
 		position: absolute;
 		user-select: none;
+		touch-action: none;
 		cursor: grab;
 		padding: 0.3rem 0.5rem;
 		font-size: large;
