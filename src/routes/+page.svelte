@@ -551,6 +551,7 @@
 	onpointerdown={handlePagePointerDown}
 	bind:this={pageElement}
 >
+	<title>pocket poetry #{data.dayNumber}</title>
 	<div class="page-content">
 		<div class="header">
 			<h1 class="page-title">pocket poetry <span class="day-number">#{data.dayNumber}</span></h1>
@@ -608,7 +609,10 @@
 				aria-label="Share preview"
 				transition:scale={{ duration: 100, start: 0.97 }}
 			>
-				<div class="share-preview-stage" style={`--share-preview-aspect-ratio: ${SHARE_PREVIEW_ASPECT_RATIO};`}>
+				<div
+					class="share-preview-stage"
+					style={`--share-preview-aspect-ratio: ${SHARE_PREVIEW_ASPECT_RATIO};`}
+				>
 					<img class="share-preview-image" src={shareImageDataUrl} alt="Share preview" />
 				</div>
 			</div>
