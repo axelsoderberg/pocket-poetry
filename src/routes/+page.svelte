@@ -695,12 +695,14 @@
 		justify-content: center;
 		padding: 5rem 1rem 0.75rem;
 		z-index: 500;
+		pointer-events: none;
 	}
 
 	.word-box-area {
 		position: relative;
 		width: 100%;
 		max-width: 980px;
+		pointer-events: auto;
 	}
 
 	.word-box-shuffle {

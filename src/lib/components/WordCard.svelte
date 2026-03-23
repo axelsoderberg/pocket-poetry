@@ -279,8 +279,15 @@
 			return;
 		}
 
-		cardX = event.clientX - offsetX + panX;
-		cardY = event.clientY - offsetY + panY;
+		const cardWidth = cardElement?.offsetWidth ?? 0;
+		const cardHeight = cardElement?.offsetHeight ?? 0;
+		const maxLeft = Math.max(0, window.innerWidth - cardWidth);
+		const maxTop = Math.max(0, window.innerHeight - cardHeight);
+		const nextLeft = clamp(event.clientX - offsetX, 0, maxLeft);
+		const nextTop = clamp(event.clientY - offsetY, 0, maxTop);
+
+		cardX = nextLeft + panX;
+		cardY = nextTop + panY;
 	}
 
 	function finishDrag() {
